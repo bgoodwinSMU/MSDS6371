@@ -1,0 +1,108 @@
+#######################
+#                     #
+#     HW 12 R         #
+#                     #
+#######################
+
+
+#######################
+#                     #
+#     Libaries        #
+#                     #
+#######################
+library(ggplot2)
+
+
+
+#######################
+#                     #
+#     Question 2      #
+#                     #
+#######################
+
+#read data
+brainDat <- read.csv("brainDat.csv")
+#look at data
+head(brainDat)
+
+
+#transform data
+brainDat$logBrain <- log(brainDat$Brain)
+brainDat$logBody <- log(brainDat$Body)
+brainDat$logGestation <- log(brainDat$Gestation)
+brainDat$logLitter <- log(brainDat$Litter)
+brainDat$bodyGroup <- cut(brainDat$logBody,c(-Inf,-2,0,2,4,6,Inf))
+levels(brainDat$BodyGrouping) <- c("Group1","Group2","Group3","Group4","Group5","Group6")
+
+#Create linear model
+brainDatlm <- lm(logBrain~logBody+logGestation+loglitter,data=brainDat)
+
+#Look at summary stats
+summary(brainDatlm)
+
+#Non-transformed data (Gestation and Brain)
+p <- ggplot(brainDat,aes(Gestation,Brain))
+p+geom_point(aes(color=factor(bodyGroup)),data = brainDat)+ xlab("Gestation time") + ylab("Brain weight in Grams")+theme_minimal()+ theme(legend.title = element_blank())+ggtitle("Brain Weight in Grams and Gestation Time")
+
+#Non-transformed data (Litter and Brain )
+q <- ggplot(brainDat,aes(Litter,Brain))
+q+geom_point(aes(color=factor(bodyGroup)),data = brainDat)+ xlab("Litter Size") + ylab("Brain weight in Grams")+ theme_minimal()+ theme(legend.title = element_blank())+ggtitle("Brain Weight in Grams and Litter Size")
+
+
+#Non-transformed data (Body and Brain )
+r <- ggplot(brainDat,aes(Body,Brain))
+r+geom_point(aes(color=factor(bodyGroup)),data = brainDat)+ xlab("Body Size") + ylab("Brain weight in Grams")+ theme_minimal()+ theme(legend.title = element_blank())+ggtitle("Brain Weight in Grams and Body Size")
+
+
+#Looks at logged plots
+
+#Transformed data (Gestation and Brain)
+p <- ggplot(brainDat,aes(logGestation,logBrain))
+p+geom_point(aes(color=factor(bodyGroup)),data = brainDat)+ xlab("Log Gestation time") + ylab("Brain weight in Grams")+theme_minimal()+ theme(legend.title = element_blank())+ggtitle("Log Brain Weight in Grams and Log Gestation Time")
+
+#Transformed data (Litter and Brain )
+q <- ggplot(brainDat,aes(logLitter,logBrain))
+q+geom_point(aes(color=factor(bodyGroup)),data = brainDat)+ xlab("Log Litter Size") + ylab("Brain weight in Grams")+ theme_minimal()+ theme(legend.title = element_blank())+ggtitle("Log Brain Weight in Grams and Log Litter Size")
+
+
+#Transformed data (Body and Brain )
+r <- ggplot(brainDat,aes(logBody,logBrain))
+r+geom_point(aes(color=factor(bodyGroup)),data = brainDat)+ xlab("Log Body Size") + ylab("Brain weight in Grams")+ theme_minimal()+ theme(legend.title = element_blank())+ggtitle("Log Brain Weight in Grams and Log Body Size")
+
+
+plot(brainDatlm)
+
+
+Brainres <- resid(brainDatlm)
+par(mfrow=c(2,2))
+
+plot(Brainres)
+
+plot(brainDat$logGestation,Brainres, ylab="Residuals", xlab="log Gestation Period")
+abline(0,0)
+
+plot(brainDat$logBody,Brainres, ylab="Residuals", xlab="log Body")
+abline(0,0)
+
+plot(brainDat$loglitter,Brainres, ylab="Residuals", xlab="log Litter")
+abline(0,0)
+
+
+#Make histogram with nrml curve overlaid
+
+#Save residuals
+studentizedResidualsBrainDat <- rstudent(brainDatlm)
+
+plot(studentizedResidualsBrainDat)
+
+#Create histogram
+hist(studresBrain, freq=FALSE, main="Distribution of Studentized Residuals",xlab="Studentized Residuals", ylab="Density", ylim=c(0,0.5))
+##Make x and y values for normal range
+xfit <- seq(min(studentizedResidualsBrainDat)-1, max(studentizedResidualsBrainDat)+1, length=40)
+yfit <- (dnorm(xfit))
+
+##Add normal curve
+lines(xfit, yfit, ylim=c(0,0.5))
+
+mean(brainDatlm$residuals^2)
+
